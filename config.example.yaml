@@ -1,0 +1,36 @@
+# TeleScout Configuration
+# Copy this file to config.yaml and fill in your details
+
+telegram:
+  api_id: YOUR_API_ID_HERE
+  api_hash: "YOUR_API_HASH_HERE"
+  phone_number: "+1234567890"
+  session_name: "telescout_session"
+
+# Your Telegram user ID to forward messages to
+forward_to_user_id: YOUR_USER_ID_HERE
+
+# Channels to monitor (can use @username or channel ID)
+channels:
+  - "@example_channel1"
+  - "@example_channel2"
+  - "-1001234567890"  # Example channel ID
+
+# Keywords to search for (case insensitive)
+keywords:
+  - "bitcoin"
+  - "crypto"
+  - "trading signal"
+  - "breaking news"
+
+# Optional: Time window to check messages (in hours)
+# If not specified, monitors real-time messages only
+time_window_hours: 24
+
+# Optional: Minimum time between forwarding messages (in seconds)
+forward_delay: 5
+
+# Security Settings (optional)
+max_messages_per_hour: 60        # Maximum total messages per hour
+max_messages_per_channel_per_hour: 20  # Maximum messages per channel per hour
+max_message_length: 4000         # Maximum message length (prevents huge messages)
