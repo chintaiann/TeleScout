@@ -36,6 +36,9 @@ class TeleScoutClient:
         self.target_user = None
         self.monitored_channels = []
         self._last_forward_time = {}
+        self._forwarded_messages = set()  # Track message IDs to prevent duplicates
+        self._max_tracked_messages = 10000  # Limit memory usage
+        self.on_message_forwarded = None  # Callback for when messages are forwarded
     
     async def start(self):
         """Start the Telegram client and authenticate."""
@@ -183,13 +186,21 @@ class TeleScoutClient:
         if not self.keyword_matcher.has_match(message.text):
             return False
         
+        # Prevent duplicate forwards - check if we've already forwarded this message
+        # Extract channel ID for both deduplication and rate limiting
+        channel_id = message.peer_id.channel_id if hasattr(message.peer_id, 'channel_id') else None
+        # For deduplication, we need a hashable identifier
+        dedup_id = (channel_id, message.id)
+        if dedup_id in self._forwarded_messages:
+            logger.debug(f"Message already forwarded (Channel: {channel_id}, ID: {message.id}), skipping duplicate")
+            return False
+        
         # Security: Check message length
         if len(message.text) > self.config.max_message_length:
             logger.warning(f"Message too long ({len(message.text)} chars), truncating to {self.config.max_message_length}")
             # We'll truncate in the forwarding function
         
-        # Rate limiting check
-        channel_id = message.peer_id.channel_id if hasattr(message.peer_id, 'channel_id') else None
+        # Rate limiting check (reuse the channel_id from above)
         current_time = datetime.now(timezone.utc)
         
         # Security: Check rate limits before processing
@@ -207,8 +218,23 @@ class TeleScoutClient:
             await self._forward_message(message, is_historical)
             self._last_forward_time[channel_id] = current_time
             
+            # Mark message as forwarded to prevent duplicates
+            self._forwarded_messages.add(dedup_id)
+            
+            # Memory management: Limit the size of tracked messages
+            if len(self._forwarded_messages) > self._max_tracked_messages:
+                # Remove oldest half of entries (approximate)
+                messages_list = list(self._forwarded_messages)
+                self._forwarded_messages = set(messages_list[-self._max_tracked_messages//2:])
+                logger.debug(f"Cleaned forwarded messages cache, now tracking {len(self._forwarded_messages)} messages")
+            
             # Security: Record message in rate limiter
             self.rate_limiter.record_message(channel_id)
+            
+            # Call callback if provided (for GUI updates)
+            if self.on_message_forwarded:
+                self.on_message_forwarded()
+            
             return True
         except FloodWaitError as e:
             logger.warning(f"Flood wait error: waiting {e.seconds} seconds")

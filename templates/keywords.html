@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Keywords - TeleScout{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">Keywords Management</h2>
+        
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Add New Keyword</h5>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="newKeyword" 
+                           placeholder="Enter keyword to monitor">
+                    <button class="btn btn-primary" type="button" onclick="addKeyword()">Add Keyword</button>
+                </div>
+                
+                <h5 class="card-title">Current Keywords</h5>
+                <div id="keywordsList">
+                    {% if keywords %}
+                        {% for keyword in keywords %}
+                        <div class="keyword-item d-flex justify-content-between align-items-center p-2 border rounded mb-2">
+                            <span class="badge bg-secondary">{{ keyword }}</span>
+                            <button class="btn btn-sm btn-outline-danger" onclick="removeKeyword('{{ keyword }}')">
+                                Remove
+                            </button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No keywords configured. Add some keywords to start monitoring.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="alertContainer"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function addKeyword() {
+    const keyword = document.getElementById('newKeyword').value.trim();
+    if (!keyword) {
+        showAlert('Please enter a keyword', 'warning');
+        return;
+    }
+
+    fetch('/api/keywords', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({keyword: keyword})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showAlert('Error: ' + data.error, 'danger');
+        } else {
+            showAlert('Keyword added successfully!', 'success');
+            loadKeywords();
+            document.getElementById('newKeyword').value = '';
+        }
+    })
+    .catch(error => {
+        showAlert('Error adding keyword: ' + error, 'danger');
+    });
+}
+
+function removeKeyword(keyword) {
+    if (!confirm(`Are you sure you want to remove the keyword "${keyword}"?`)) {
+        return;
+    }
+
+    fetch('/api/keywords', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({keyword: keyword})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showAlert('Error: ' + data.error, 'danger');
+        } else {
+            showAlert('Keyword removed successfully!', 'success');
+            loadKeywords();
+        }
+    })
+    .catch(error => {
+        showAlert('Error removing keyword: ' + error, 'danger');
+    });
+}
+
+function loadKeywords() {
+    fetch('/api/keywords')
+    .then(response => response.json())
+    .then(keywords => {
+        const container = document.getElementById('keywordsList');
+        if (keywords.length === 0) {
+            container.innerHTML = '<p class="text-muted">No keywords configured. Add some keywords to start monitoring.</p>';
+        } else {
+            container.innerHTML = keywords.map(keyword => `
+                <div class="keyword-item d-flex justify-content-between align-items-center p-2 border rounded mb-2">
+                    <span class="badge bg-secondary">${keyword}</span>
+                    <button class="btn btn-sm btn-outline-danger" onclick="removeKeyword('${keyword}')">
+                        Remove
+                    </button>
+                </div>
+            `).join('');
+        }
+    })
+    .catch(error => {
+        showAlert('Error loading keywords: ' + error, 'danger');
+    });
+}
+
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alertContainer');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    alertContainer.appendChild(alert);
+    
+    setTimeout(() => {
+        alert.remove();
+    }, 5000);
+}
+
+// Allow adding keywords with Enter key
+document.getElementById('newKeyword').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        addKeyword();
+    }
+});
+</script>
+{% endblock %}

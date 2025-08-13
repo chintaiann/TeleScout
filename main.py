@@ -59,8 +59,19 @@ async def main():
         action="store_true",
         help="Skip historical message scan, only do real-time monitoring"
     )
+    parser.add_argument(
+        "--gui", 
+        action="store_true",
+        help="Launch GUI interface instead of command line mode"
+    )
     
     args = parser.parse_args()
+    
+    # Launch GUI if requested
+    if args.gui:
+        from src.gui import launch_gui
+        launch_gui()
+        return
     
     # Set up logging
     setup_logging(args.log_level, not args.no_log_file)

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Channels - TeleScout{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">Channels Management</h2>
+        
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Add New Channel</h5>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="newChannel" 
+                           placeholder="@channelname or -100xxxxxxxxxx">
+                    <button class="btn btn-primary" type="button" onclick="addChannel()">Add Channel</button>
+                </div>
+                
+                <div class="alert alert-info">
+                    <small>
+                        You can use either the channel username (e.g., @channelname) or the channel ID (e.g., -100xxxxxxxxxx).
+                    </small>
+                </div>
+                
+                <h5 class="card-title">Current Channels</h5>
+                <div id="channelsList">
+                    {% if channels %}
+                        {% for channel in channels %}
+                        <div class="channel-item d-flex justify-content-between align-items-center p-2 border rounded mb-2">
+                            <span class="badge bg-primary">{{ channel }}</span>
+                            <button class="btn btn-sm btn-outline-danger" onclick="removeChannel('{{ channel }}')">
+                                Remove
+                            </button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No channels configured. Add some channels to start monitoring.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="alertContainer"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function addChannel() {
+    const channel = document.getElementById('newChannel').value.trim();
+    if (!channel) {
+        showAlert('Please enter a channel name or ID', 'warning');
+        return;
+    }
+
+    fetch('/api/channels', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({channel: channel})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showAlert('Error: ' + data.error, 'danger');
+        } else {
+            showAlert('Channel added successfully!', 'success');
+            loadChannels();
+            document.getElementById('newChannel').value = '';
+        }
+    })
+    .catch(error => {
+        showAlert('Error adding channel: ' + error, 'danger');
+    });
+}
+
+function removeChannel(channel) {
+    if (!confirm(`Are you sure you want to remove the channel "${channel}"?`)) {
+        return;
+    }
+
+    fetch('/api/channels', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({channel: channel})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showAlert('Error: ' + data.error, 'danger');
+        } else {
+            showAlert('Channel removed successfully!', 'success');
+            loadChannels();
+        }
+    })
+    .catch(error => {
+        showAlert('Error removing channel: ' + error, 'danger');
+    });
+}
+
+function loadChannels() {
+    fetch('/api/channels')
+    .then(response => response.json())
+    .then(channels => {
+        const container = document.getElementById('channelsList');
+        if (channels.length === 0) {
+            container.innerHTML = '<p class="text-muted">No channels configured. Add some channels to start monitoring.</p>';
+        } else {
+            container.innerHTML = channels.map(channel => `
+                <div class="channel-item d-flex justify-content-between align-items-center p-2 border rounded mb-2">
+                    <span class="badge bg-primary">${channel}</span>
+                    <button class="btn btn-sm btn-outline-danger" onclick="removeChannel('${channel}')">
+                        Remove
+                    </button>
+                </div>
+            `).join('');
+        }
+    })
+    .catch(error => {
+        showAlert('Error loading channels: ' + error, 'danger');
+    });
+}
+
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alertContainer');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    alertContainer.appendChild(alert);
+    
+    setTimeout(() => {
+        alert.remove();
+    }, 5000);
+}
+
+// Allow adding channels with Enter key
+document.getElementById('newChannel').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        addChannel();
+    }
+});
+</script>
+{% endblock %}

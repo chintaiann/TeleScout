@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Configuration - TeleScout{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">Configuration</h2>
+        
+        <div class="card">
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="configTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="telegram-tab" data-bs-toggle="tab" 
+                                data-bs-target="#telegram" type="button" role="tab">
+                            Telegram API
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="general-tab" data-bs-toggle="tab" 
+                                data-bs-target="#general" type="button" role="tab">
+                            General Settings
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="security-tab" data-bs-toggle="tab" 
+                                data-bs-target="#security" type="button" role="tab">
+                            Security Settings
+                        </button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content mt-3" id="configTabContent">
+                    <!-- Telegram API Tab -->
+                    <div class="tab-pane fade show active" id="telegram" role="tabpanel">
+                        <form id="telegramForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="api_id" class="form-label">API ID</label>
+                                        <input type="text" class="form-control" id="api_id" 
+                                               value="{{ config.telegram.api_id if config.telegram else '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="api_hash" class="form-label">API Hash</label>
+                                        <input type="text" class="form-control" id="api_hash" 
+                                               value="{{ config.telegram.api_hash if config.telegram else '' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="phone_number" class="form-label">Phone Number</label>
+                                        <input type="text" class="form-control" id="phone_number" 
+                                               placeholder="+1234567890"
+                                               value="{{ config.telegram.phone_number if config.telegram else '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="session_name" class="form-label">Session Name</label>
+                                        <input type="text" class="form-control" id="session_name" 
+                                               value="{{ config.telegram.session_name if config.telegram else 'telescout_session' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <small>
+                                    Get your API credentials from <a href="https://my.telegram.org/apps" target="_blank">https://my.telegram.org/apps</a><br>
+                                    Phone number should include country code (e.g., +1234567890)
+                                </small>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- General Settings Tab -->
+                    <div class="tab-pane fade" id="general" role="tabpanel">
+                        <form id="generalForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="forward_to_user_id" class="form-label">Forward to User ID</label>
+                                        <input type="number" class="form-control" id="forward_to_user_id" 
+                                               value="{{ config.forward_to_user_id or '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="time_window_hours" class="form-label">Time Window (hours)</label>
+                                        <input type="number" class="form-control" id="time_window_hours" 
+                                               value="{{ config.time_window_hours or '' }}" 
+                                               placeholder="Leave empty for real-time only">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="forward_delay" class="form-label">Forward Delay (seconds)</label>
+                                        <input type="number" class="form-control" id="forward_delay" 
+                                               value="{{ config.forward_delay or 5 }}" min="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Security Settings Tab -->
+                    <div class="tab-pane fade" id="security" role="tabpanel">
+                        <form id="securityForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="max_messages_per_hour" class="form-label">Max Messages Per Hour</label>
+                                        <input type="number" class="form-control" id="max_messages_per_hour" 
+                                               value="{{ config.max_messages_per_hour or 60 }}" max="200">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="max_messages_per_channel_per_hour" class="form-label">Max Messages Per Channel Per Hour</label>
+                                        <input type="number" class="form-control" id="max_messages_per_channel_per_hour" 
+                                               value="{{ config.max_messages_per_channel_per_hour or 20 }}" max="50">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="max_message_length" class="form-label">Max Message Length</label>
+                                        <input type="number" class="form-control" id="max_message_length" 
+                                               value="{{ config.max_message_length or 4000 }}" max="10000">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-warning">
+                                <small>
+                                    Security limits help prevent spam and protect against API abuse.<br>
+                                    These values have maximum limits for security reasons.
+                                </small>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <button type="button" class="btn btn-primary" onclick="saveConfig()">Save Configuration</button>
+                    <button type="button" class="btn btn-secondary" onclick="loadConfig()">Reload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="alertContainer"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function saveConfig() {
+    const config = {
+        telegram: {
+            api_id: document.getElementById('api_id').value,
+            api_hash: document.getElementById('api_hash').value,
+            phone_number: document.getElementById('phone_number').value,
+            session_name: document.getElementById('session_name').value
+        },
+        forward_to_user_id: parseInt(document.getElementById('forward_to_user_id').value) || null,
+        time_window_hours: parseInt(document.getElementById('time_window_hours').value) || null,
+        forward_delay: parseInt(document.getElementById('forward_delay').value) || 5,
+        max_messages_per_hour: parseInt(document.getElementById('max_messages_per_hour').value) || 60,
+        max_messages_per_channel_per_hour: parseInt(document.getElementById('max_messages_per_channel_per_hour').value) || 20,
+        max_message_length: parseInt(document.getElementById('max_message_length').value) || 4000
+    };
+
+    fetch('/api/config', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showAlert('Error: ' + data.error, 'danger');
+        } else {
+            showAlert('Configuration saved successfully!', 'success');
+        }
+    })
+    .catch(error => {
+        showAlert('Error saving configuration: ' + error, 'danger');
+    });
+}
+
+function loadConfig() {
+    location.reload();
+}
+
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alertContainer');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    alertContainer.appendChild(alert);
+    
+    setTimeout(() => {
+        alert.remove();
+    }, 5000);
+}
+</script>
+{% endblock %}

@@ -1,6 +1,11 @@
-# Environment files
+# Sensitive configuration files
 .env
+.env.local
+.env.production
 config.yaml
+config.yml
+config-*.yaml
+config-*.yml
 
 # Telegram session files
 *.session
@@ -44,7 +49,21 @@ ENV/
 
 # Logs
 *.log
-logs/\
+logs/
 
-CLAUDE.md
-config.yaml
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Personal notes and documentation (optional)
+NOTES.md
+TODO.md
+PERSONAL.md
